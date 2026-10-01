@@ -1,0 +1,16 @@
+{
+  "plugins": [
+    {
+      "id": "checkbox",
+      "repo": "fishinglol/check-box-plugin",
+      "commit": "081b3aa2cf8674613817f108f9b1d03604e1e413",
+      "manifestSha256": "a96fbd909a294e4b3c730b7316f0c56b90c0ccfd678de1cd442aeab1f935a66e",
+      "mainSha256": "f50d9120693af94c572de73f76e33e478fdb90e721418c13d7190a5870dac6ca",
+      "screenshots": [
+        "01-slash-list.jpg",
+        "02-new-checklist.jpg",
+        "03-ticked-off.jpg"
+      ]
+    }
+  ]
+}
