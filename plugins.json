@@ -3,9 +3,9 @@
     {
       "id": "checkbox",
       "repo": "fishinglol/check-box-plugin",
-      "commit": "081b3aa2cf8674613817f108f9b1d03604e1e413",
-      "manifestSha256": "a96fbd909a294e4b3c730b7316f0c56b90c0ccfd678de1cd442aeab1f935a66e",
-      "mainSha256": "f50d9120693af94c572de73f76e33e478fdb90e721418c13d7190a5870dac6ca",
+      "commit": "fe6df852d6eccf052b4ac061b05809fca1843efe",
+      "manifestSha256": "19999e4fbdc39b4fa285876ac28069cc2fa72878e468f2390d7967f910816ae1",
+      "mainSha256": "a50fa7227d1a657482a0f761e5253acd31cf70e8c3a429f08a308c9142563c29",
       "screenshots": [
         "01-slash-list.jpg",
         "02-new-checklist.jpg",
