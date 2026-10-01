@@ -24,6 +24,13 @@ Raise `version` in your `manifest.json`, commit, and open a pull request that ru
 new version only after it has been reviewed and merged here. Changing your repo without a new entry changes nothing for users: the
 app downloads your files at the pinned commit and refuses any file that doesn't match its hash.
 
+## Reviewing an update
+
+`node scripts/registry.mjs diff` (CI prints it on every pull request) shows, for each new or changed entry, the diff of
+`manifest.json` and `main.js` between the previously approved commit and the new one, and flags any permission that wasn't
+asked for before. Read that instead of the whole file again, but still read it: the diff is only as good as the old version
+having been read.
+
 ## What a maintainer checks
 
 The rules in Granite's `CONTRIBUTING.md` apply: permissions match what the code does, no `eval` or remote scripts, note text is

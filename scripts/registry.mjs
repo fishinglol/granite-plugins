@@ -6,12 +6,19 @@
 //   node scripts/registry.mjs verify
 //       For every line in plugins.json: fetch the files at the pinned commit from GitHub and check they still hash to what is listed,
 //       that the manifest's id is the entry's id, and that there are at least 3 screenshots. CI runs this on every pull request.
+//   node scripts/registry.mjs diff [<git ref>]
+//       For each entry that is new or changed compared with <git ref> (default: origin/main), prints the manifest and main.js diff
+//       between the previously pinned commit and the new one (the whole file for a new plugin), plus a reminder of any new permission.
+//       A reviewer of an update reads this instead of the whole file again. A comparison between two commits of the SAME repo only.
 //
 // The reviewer's job is still to READ main.js at that commit; this only proves that what was read is what users get.
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const FILE = new URL("../plugins.json", import.meta.url);
 const MIN_SCREENSHOTS = 3;
@@ -89,6 +96,47 @@ if (cmd === "pin") {
       fail(`${e.id}: ${err.message}`);
     }
   }
+} else if (cmd === "diff") {
+  const ref = args[0] ?? "origin/main";
+  let before = [];
+  try {
+    before = JSON.parse(execFileSync("git", ["show", `${ref}:plugins.json`], { encoding: "utf8", cwd: fileURLToPath(new URL("..", import.meta.url)) })).plugins;
+  } catch {
+    console.warn(`(no plugins.json at ${ref}: every plugin is shown as new)`);
+  }
+  const unified = (a, b, label) => {
+    const dir = mkdtempSync(join(tmpdir(), "reg-diff-"));
+    writeFileSync(join(dir, "a"), a);
+    writeFileSync(join(dir, "b"), b);
+    try {
+      return execFileSync("diff", ["-u", "--label", `${label} (old)`, "--label", `${label} (new)`, join(dir, "a"), join(dir, "b")], { encoding: "utf8" });
+    } catch (e) {
+      return e.stdout ?? ""; // diff exits 1 when the files differ
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+  for (const e of registry.plugins) {
+    const old = before.find((p) => p.id === e.id);
+    if (old && old.commit === e.commit) continue;
+    if (old && old.repo !== e.repo) {
+      fail(`${e.id}: moved from ${old.repo} to ${e.repo}; review it as a new plugin`);
+      continue;
+    }
+    console.log(`\n=== ${e.id}: ${old ? `${old.commit.slice(0, 7)} -> ${e.commit.slice(0, 7)}` : "new plugin"} (${e.repo}) ===`);
+    const now = source(e.repo, e.commit);
+    const then = old ? source(old.repo, old.commit) : null;
+    for (const file of ["manifest.json", "main.js"]) {
+      const next = await now.text(file);
+      console.log(unified(then ? await then.text(file) : "", next, `${e.id}/${file}`) || `(${file} unchanged)`);
+    }
+    if (old) {
+      const perms = (t) => new Set(JSON.parse(t).permissions ?? []);
+      const was = perms(await then.text("manifest.json"));
+      const added = [...perms(await now.text("manifest.json"))].filter((p) => !was.has(p));
+      if (added.length) console.log(`!! asks for NEW permissions: ${added.join(", ")}`);
+    }
+  }
 } else {
-  throw new Error("usage: node scripts/registry.mjs pin|verify");
+  throw new Error("usage: node scripts/registry.mjs pin|verify|diff");
 }

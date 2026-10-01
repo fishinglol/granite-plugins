@@ -5,6 +5,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: node scripts/registry.mjs verify
+      - name: What changed since main (for the reviewer)
+        if: github.event_name == 'pull_request'
+        run: node scripts/registry.mjs diff origin/${{ github.base_ref }}
